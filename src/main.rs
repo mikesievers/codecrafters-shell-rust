@@ -12,6 +12,5 @@ fn main() {
         .read_line(&mut command)
         .expect("Could not read input");
 
-    println!("{{{}}}: command not found", command.trim());
-
+    println!("{}: command not found", command.trim());
 }
