@@ -1,7 +1,11 @@
+# About
+
+This is an implementation of the codecrafters build your own shell challenge.
+Status:
+
 [![progress-banner](https://backend.codecrafters.io/progress/shell/cde2219d-369d-496e-b6ca-1f4b9f584277)](https://app.codecrafters.io/users/mikesievers?r=2qF)
 
-This is a starting point for Rust solutions to the
-["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview).
+The challenge: ["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview).
 
 In this challenge, you'll build your own POSIX compliant shell that's capable of
 interpreting shell commands, running external programs and builtin commands like
