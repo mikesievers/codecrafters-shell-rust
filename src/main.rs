@@ -7,12 +7,28 @@ fn main() {
         print!("$ ");
         io::stdout().flush().unwrap();
 
-        let mut command = String::new();
+        let mut buffer = String::new();
 
-        stdin()
-            .read_line(&mut command)
-            .expect("Could not read input");
+        // TODO: Add error handling rather than panicking in read_command
+        read_input(&mut buffer);
 
-        println!("{}: command not found", command.trim());
+        let cmd = parse_input(&buffer);
+
+        match cmd {
+            "exit" => {
+                break;
+            }
+            _ => {
+                println!("{}: command not found", cmd);
+            }
+        }
     }
+}
+
+fn read_input(buffer: &mut String) {
+    stdin().read_line(buffer).expect("Could not read input");
+}
+
+fn parse_input(buffer: &String) -> &str {
+    buffer.trim()
 }
