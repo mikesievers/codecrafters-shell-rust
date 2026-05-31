@@ -1,10 +1,13 @@
 use itertools::Itertools;
 #[allow(unused_imports)]
 use std::io::{self, Write, stdin};
+use std::process::exit;
 
 enum Builtin {
     Exit,
     Echo(Vec<String>),
+    // TODO: Refactor Notbuiltin to be a command
+    // This will need the parse function to return an enum of Builtin/Command
     Notbuiltin(String),
 }
 
@@ -21,18 +24,22 @@ fn main() {
 
         let cmd_line = parse_input(&buffer);
 
-        match cmd_line {
-            Some(Builtin::Exit) => {
-                break;
-            }
-            Some(Builtin::Notbuiltin(cmd)) => {
-                println!("{}: command not found", cmd);
-            }
-            Some(Builtin::Echo(params)) => {
-                println!("{}", params.join(" "));
-            }
-            _ => {}
+        execute_cmd_line(cmd_line);
+    }
+}
+
+fn execute_cmd_line(cmd_line: Option<Builtin>) {
+    match cmd_line {
+        Some(Builtin::Exit) => {
+            exit(0);
         }
+        Some(Builtin::Echo(params)) => {
+            println!("{}", params.join(" "));
+        }
+        Some(Builtin::Notbuiltin(cmd)) => {
+            println!("{}: command not found", cmd);
+        }
+        _ => {}
     }
 }
 
