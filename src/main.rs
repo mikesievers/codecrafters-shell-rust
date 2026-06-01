@@ -10,6 +10,7 @@ use std::assert_matches;
 enum Builtin {
     Exit,
     Echo(Vec<String>),
+    Type(Vec<String>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -22,6 +23,16 @@ struct Executable {
 enum Command {
     BuiltinType(Builtin),
     ExecutableType(Executable),
+}
+
+impl Command {
+    fn parameters(&self) -> Option<&Vec<String>> {
+        match self {
+            Command::BuiltinType(Builtin::Echo(parameters)) => Some(parameters),
+            Command::BuiltinType(Builtin::Type(parameters)) => Some(parameters),
+            _ => None,
+        }
+    }
 }
 
 fn main() {
@@ -73,6 +84,9 @@ fn parse_input(buffer: &String) -> Option<Command> {
             "echo" => Some(Command::BuiltinType(Builtin::Echo(
                 params.into_iter().map(|s| s.to_string()).collect_vec(),
             ))),
+            "type" => Some(Command::BuiltinType(Builtin::Type(
+                params.into_iter().map(|s| s.to_string()).collect_vec(),
+            ))),
             _ => Some(Command::ExecutableType(Executable {
                 name: command.to_string(),
                 parameters: vec![],
@@ -86,15 +100,25 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_parse_builtins() {
+    fn test_parse_builtin_exit() {
         assert_eq!(
             parse_input(&"exit".to_string()).unwrap(),
             Command::BuiltinType(Builtin::Exit)
         );
+    }
+
+    #[test]
+    fn test_parse_builtin_echo() {
         assert_matches!(
             parse_input(&"echo some thing".to_string()),
             Some(Command::BuiltinType(Builtin::Echo(_)))
         );
+    }
+
+    #[test]
+    fn test_parse_builtin_type() {
+        let cmd = parse_input(&"type exit".to_string()).unwrap();
+        assert_eq!(cmd.parameters().unwrap(), &vec!["exit".to_string()]);
     }
 
     #[test]
