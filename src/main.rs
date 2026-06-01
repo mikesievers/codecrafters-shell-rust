@@ -29,7 +29,7 @@ impl Builtin {
                         println!("{} is a shell builtin", parameters[0])
                     }
                     Command::ExecutableType(_) => {
-                        println!("{}: command not found", parameters[0])
+                        println!("{}: not found", parameters[0])
                     }
                 }
             }
