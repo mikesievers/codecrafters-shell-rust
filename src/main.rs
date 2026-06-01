@@ -3,12 +3,25 @@ use itertools::Itertools;
 use std::io::{self, Write, stdin};
 use std::process::exit;
 
+#[cfg(test)]
+use std::assert_matches;
+
+#[derive(Debug, PartialEq)]
 enum Builtin {
     Exit,
     Echo(Vec<String>),
-    // TODO: Refactor Notbuiltin to be a command
-    // This will need the parse function to return an enum of Builtin/Command
-    Notbuiltin(String),
+}
+
+#[derive(Debug, PartialEq)]
+struct Executable {
+    name: String,
+    parameters: Vec<String>,
+}
+
+#[derive(Debug, PartialEq)]
+enum Command {
+    BuiltinType(Builtin),
+    ExecutableType(Executable),
 }
 
 fn main() {
@@ -28,15 +41,18 @@ fn main() {
     }
 }
 
-fn execute_cmd_line(cmd_line: Option<Builtin>) {
+fn execute_cmd_line(cmd_line: Option<Command>) {
     match cmd_line {
-        Some(Builtin::Exit) => {
+        Some(Command::BuiltinType(Builtin::Exit)) => {
             exit(0);
         }
-        Some(Builtin::Echo(params)) => {
+        Some(Command::BuiltinType(Builtin::Echo(params))) => {
             println!("{}", params.join(" "));
         }
-        Some(Builtin::Notbuiltin(cmd)) => {
+        Some(Command::ExecutableType(Executable {
+            name: cmd,
+            parameters: _,
+        })) => {
             println!("{}: command not found", cmd);
         }
         _ => {}
@@ -47,17 +63,49 @@ fn read_input(buffer: &mut String) {
     stdin().read_line(buffer).expect("Could not read input");
 }
 
-fn parse_input(buffer: &String) -> Option<Builtin> {
+fn parse_input(buffer: &String) -> Option<Command> {
     let line_parts = buffer.trim().split(" ").collect_vec();
 
     match line_parts.split_first() {
         None => return None,
         Some((&command, params)) => match command {
-            "exit" => Some(Builtin::Exit),
-            "echo" => Some(Builtin::Echo(
+            "exit" => Some(Command::BuiltinType(Builtin::Exit)),
+            "echo" => Some(Command::BuiltinType(Builtin::Echo(
                 params.into_iter().map(|s| s.to_string()).collect_vec(),
-            )),
-            _ => Some(Builtin::Notbuiltin(command.to_string())),
+            ))),
+            _ => Some(Command::ExecutableType(Executable {
+                name: command.to_string(),
+                parameters: vec![],
+            })),
         },
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parse_builtins() {
+        assert_eq!(
+            parse_input(&"exit".to_string()).unwrap(),
+            Command::BuiltinType(Builtin::Exit)
+        );
+        assert_matches!(
+            parse_input(&"echo some thing".to_string()),
+            Some(Command::BuiltinType(Builtin::Echo(_)))
+        );
+    }
+
+    #[test]
+    fn test_parse_executable() {
+        let _exe_name = "myexe".to_string();
+        assert_matches!(
+            parse_input(&"myexe somefile".to_string()).unwrap(),
+            Command::ExecutableType(Executable {
+                name: _exe_name,
+                parameters: _
+            })
+        )
     }
 }
