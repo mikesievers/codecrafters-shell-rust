@@ -13,10 +13,40 @@ enum Builtin {
     Type(Vec<String>),
 }
 
+impl Builtin {
+    fn execute(&self) {
+        match self {
+            Builtin::Exit => exit(0),
+            Builtin::Echo(parameters) => {
+                println!("{}", parameters.join(" "));
+            }
+            Builtin::Type(parameters) => {
+                let cmd = parse_input(&parameters.join(" ")).unwrap();
+                match cmd {
+                    Command::BuiltinType(Builtin::Exit)
+                    | Command::BuiltinType(Builtin::Echo(_))
+                    | Command::BuiltinType(Builtin::Type(_)) => {
+                        println!("{} is a shell builtin", parameters[0])
+                    }
+                    Command::ExecutableType(_) => {
+                        println!("type: command not found")
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 struct Executable {
     name: String,
     parameters: Vec<String>,
+}
+
+impl Executable {
+    fn execute(&self) {
+        println!("{}: command not found", self.name);
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +56,7 @@ enum Command {
 }
 
 impl Command {
+    // NOTE: The parameters fn could be implemented by Builtin and Executable individually
     fn parameters(&self) -> Option<&Vec<String>> {
         match self {
             Command::BuiltinType(Builtin::Echo(parameters)) => Some(parameters),
@@ -54,18 +85,8 @@ fn main() {
 
 fn execute_cmd_line(cmd_line: Option<Command>) {
     match cmd_line {
-        Some(Command::BuiltinType(Builtin::Exit)) => {
-            exit(0);
-        }
-        Some(Command::BuiltinType(Builtin::Echo(params))) => {
-            println!("{}", params.join(" "));
-        }
-        Some(Command::ExecutableType(Executable {
-            name: cmd,
-            parameters: _,
-        })) => {
-            println!("{}: command not found", cmd);
-        }
+        Some(Command::BuiltinType(builtin)) => builtin.execute(),
+        Some(Command::ExecutableType(executable)) => executable.execute(),
         _ => {}
     }
 }
