@@ -59,16 +59,6 @@ enum Command {
     External(ExecutableCmd),
 }
 
-impl Command {
-    // Top level dispatcher
-    fn run(&self) -> io::Result<i32> {
-        match self {
-            Command::Builtin(cmd) => cmd.run(),
-            Command::External(cmd) => cmd.run(),
-        }
-    }
-}
-
 fn main() {
     // Main REPL loop
     loop {
