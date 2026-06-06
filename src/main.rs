@@ -168,15 +168,15 @@ mod test {
         assert_matches!(cmd, Command::Builtin(Builtin::Type(Type { args: _ })));
     }
 
-    // #[test]
-    // fn test_parse_executable() {
-    //     let _exe_name = "myexe".to_string();
-    //     assert_matches!(
-    //         parse_input(&"myexe somefile".to_string()).unwrap(),
-    //         OldCommand::ExecutableType(ExecutableCmd {
-    //             name: _exe_name,
-    //             parameters: _
-    //         })
-    //     )
-    // }
+    #[test]
+    fn test_parse_executable() {
+        let _exe_name = "myexe".to_string();
+        assert_matches!(
+            parse_input(&"myexe somefile".to_string()).unwrap(),
+            Command::External(ExecutableCmd {
+                name: _,
+                parameters: _
+            })
+        );
+    }
 }
