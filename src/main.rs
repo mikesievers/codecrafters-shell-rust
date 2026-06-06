@@ -3,11 +3,13 @@ use std::io::{self, Error, Write, stdin};
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
-mod echo;
-mod exit;
+mod builtin_echo;
+mod builtin_exit;
+mod builtin_type;
 
-use echo::Echo;
-use exit::Exit;
+use builtin_echo::Echo;
+use builtin_exit::Exit;
+use builtin_type::Type;
 
 // Builtins
 // List of known builtins to be used to match them in strings
@@ -16,6 +18,25 @@ use exit::Exit;
 enum BuiltinId {
     Exit,
     Echo,
+    Type,
+}
+
+#[derive(Debug)]
+enum Builtin {
+    Exit(Exit),
+    Echo(Echo),
+    Type(Type),
+}
+
+impl Builtin {
+    // Dispatcher method
+    fn run(&self) -> io::Result<i32> {
+        match self {
+            Builtin::Exit(cmd) => cmd.run(),
+            Builtin::Echo(cmd) => cmd.run(),
+            Builtin::Type(cmd) => cmd.run(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -28,22 +49,6 @@ impl ExecutableCmd {
     fn run(&self) -> io::Result<i32> {
         println!("{}: command not found", self.name);
         Err(Error::from_raw_os_error(1))
-    }
-}
-
-#[derive(Debug)]
-enum Builtin {
-    Exit(Exit),
-    Echo(Echo),
-}
-
-impl Builtin {
-    // Dispatcher method
-    fn run(&self) -> io::Result<i32> {
-        match self {
-            Builtin::Exit(cmd) => cmd.run(),
-            Builtin::Echo(cmd) => cmd.run(),
-        }
     }
 }
 
@@ -106,6 +111,9 @@ fn parse_input(buffer: &String) -> Option<Command> {
             Ok(BuiltinId::Echo) => Some(Command::Builtin(Builtin::Echo(Echo {
                 args: params.iter().map(|s| s.to_string()).collect_vec(),
             }))),
+            Ok(BuiltinId::Type) => Some(Command::Builtin(Builtin::Type(Type {
+                args: params.iter().map(|s| s.to_string()).collect_vec(),
+            }))),
             Err(_) => None,
         },
     }
@@ -160,11 +168,11 @@ mod test {
         );
     }
 
-    // #[test]
-    // fn test_parse_builtin_type() {
-    //     let cmd = parse_input(&"type exit".to_string()).unwrap();
-    //     assert_eq!(cmd.parameters().unwrap(), &vec!["exit".to_string()]);
-    // }
+    #[test]
+    fn test_parse_builtin_type() {
+        let cmd = parse_input(&"type exit".to_string()).unwrap();
+        assert_matches!(cmd, Command::Builtin(Builtin::Type(Type { args: _ })));
+    }
 
     // #[test]
     // fn test_parse_executable() {
