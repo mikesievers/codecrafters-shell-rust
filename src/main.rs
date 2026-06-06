@@ -1,9 +1,13 @@
 use itertools::Itertools;
-use std::any::Any;
 use std::io::{self, Error, Write, stdin};
-use std::process::exit;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
+
+mod echo;
+mod exit;
+
+use echo::Echo;
+use exit::Exit;
 
 // Builtins
 // List of known builtins to be used to match them in strings
@@ -12,32 +16,6 @@ use strum_macros::{Display, EnumString};
 enum BuiltinId {
     Exit,
     Echo,
-}
-
-// Exit
-#[derive(Debug, PartialEq)]
-struct Exit {
-    code: Option<i32>,
-}
-
-impl Exit {
-    fn run(&self) -> io::Result<i32> {
-        exit(self.code.unwrap_or(0));
-    }
-}
-
-// Echo
-#[derive(Debug, PartialEq)]
-struct Echo {
-    args: Vec<String>,
-}
-
-impl Echo {
-    fn run(&self) -> io::Result<i32> {
-        let line = self.args.join(" ");
-        println!("{}", line);
-        Err(Error::from_raw_os_error(0))
-    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -125,9 +103,9 @@ fn parse_input(buffer: &String) -> Option<Command> {
                 let code = params.first().and_then(|s| s.parse::<i32>().ok());
                 Some(Command::Builtin(Builtin::Exit(Exit { code })))
             }
-            Ok(BuiltinId::Echo) => {
-                Some(Command::Builtin(Builtin::Echo(Echo { args: params.iter().map(|s| s.to_string()).collect_vec() })))
-            }
+            Ok(BuiltinId::Echo) => Some(Command::Builtin(Builtin::Echo(Echo {
+                args: params.iter().map(|s| s.to_string()).collect_vec(),
+            }))),
             Err(_) => None,
         },
     }
@@ -178,7 +156,7 @@ mod test {
     fn test_parse_builtin_echo() {
         assert_matches!(
             parse_input(&"echo some thing".to_string()).unwrap(),
-            Command::Builtin(Builtin::Echo(Echo{args: _}))
+            Command::Builtin(Builtin::Echo(Echo { args: _ }))
         );
     }
 
