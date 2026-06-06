@@ -1,5 +1,6 @@
 use super::BuiltinId;
 use std::io::{self, Error};
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub struct Type {
@@ -8,8 +9,16 @@ pub struct Type {
 
 impl Type {
     pub fn run(&self) -> io::Result<i32> {
-        let line = self.args.join(" ");
-        println!("{}", line);
+        let cmd_name = self.args.first().unwrap();
+
+        match BuiltinId::from_str(cmd_name) {
+            Ok(_) => {
+                println!("{} is a shell builtin", cmd_name)
+            }
+            Err(_) => {
+                println!("{}: not found", cmd_name)
+            }
+        }
         Err(Error::from_raw_os_error(0))
     }
 }
