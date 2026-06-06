@@ -113,27 +113,6 @@ fn parse_input(buffer: &String) -> Option<Command> {
     }
 }
 
-// fn parse_input(buffer: &String) -> Option<OldCommand> {
-//     let line_parts = buffer.trim().split(" ").collect_vec();
-
-//     match line_parts.split_first() {
-//         None => return None,
-//         Some((&command, params)) => match command {
-//             "exit" => Some(OldCommand::BuiltinType(Builtin::Exit)),
-//             "echo" => Some(OldCommand::BuiltinType(Builtin::Echo(
-//                 params.into_iter().map(|s| s.to_string()).collect_vec(),
-//             ))),
-//             "type" => Some(OldCommand::BuiltinType(Builtin::Type(
-//                 params.into_iter().map(|s| s.to_string()).collect_vec(),
-//             ))),
-//             _ => Some(OldCommand::ExecutableType(ExecutableCmd {
-//                 name: command.to_string(),
-//                 parameters: vec![],
-//             })),
-//         },
-//     }
-// }
-
 #[cfg(test)]
 mod test {
     use super::*;
