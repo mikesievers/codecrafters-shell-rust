@@ -114,7 +114,11 @@ fn parse_input(buffer: &String) -> Option<Command> {
             Ok(BuiltinId::Type) => Some(Command::Builtin(Builtin::Type(Type {
                 args: params.iter().map(|s| s.to_string()).collect_vec(),
             }))),
-            Err(_) => None,
+            // If matching a builtin fails, treat as executable command
+            Err(_) => Some(Command::External(ExecutableCmd {
+                name: command.to_string(),
+                parameters: params.iter().map(|s| s.to_string()).collect_vec(),
+            })),
         },
     }
 }
