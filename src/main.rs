@@ -5,33 +5,38 @@ use std::process::exit;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
-
 // Builtins
-// Every built in command must be able to run()
-trait BuiltinCmd: std::fmt::Debug {
-    fn run(&self) -> io::Result<i32>;
-    fn as_any(&self) -> &dyn Any;
-}
-
-// These are the known builtins
+// List of known builtins to be used to match them in strings
 #[derive(Debug, PartialEq, EnumString, Display)]
 #[strum(serialize_all = "lowercase")]
 enum BuiltinId {
     Exit,
+    Echo,
 }
 
+// Exit
 #[derive(Debug, PartialEq)]
 struct Exit {
     code: Option<i32>,
 }
 
-impl BuiltinCmd for Exit {
+impl Exit {
     fn run(&self) -> io::Result<i32> {
         exit(self.code.unwrap_or(0));
     }
+}
 
-    fn as_any(&self) -> &dyn Any {
-        self
+// Echo
+#[derive(Debug, PartialEq)]
+struct Echo {
+    args: Vec<String>,
+}
+
+impl Echo {
+    fn run(&self) -> io::Result<i32> {
+        let line = self.args.join(" ");
+        println!("{}", line);
+        Err(Error::from_raw_os_error(0))
     }
 }
 
@@ -49,10 +54,36 @@ impl ExecutableCmd {
 }
 
 #[derive(Debug)]
+enum Builtin {
+    Exit(Exit),
+    Echo(Echo),
+}
+
+impl Builtin {
+    // Dispatcher method
+    fn run(&self) -> io::Result<i32> {
+        match self {
+            Builtin::Exit(cmd) => cmd.run(),
+            Builtin::Echo(cmd) => cmd.run(),
+        }
+    }
+}
+
+#[derive(Debug)]
 enum Command {
     //Builtin(Box<dyn BuiltinCmd>),
-    Builtin(Box<dyn BuiltinCmd>),
+    Builtin(Builtin),
     External(ExecutableCmd),
+}
+
+impl Command {
+    // Top level dispatcher
+    fn run(&self) -> io::Result<i32> {
+        match self {
+            Command::Builtin(cmd) => cmd.run(),
+            Command::External(cmd) => cmd.run(),
+        }
+    }
 }
 
 fn main() {
@@ -68,7 +99,7 @@ fn main() {
 
         let cmd_line = parse_input(&buffer);
 
-        let _exit_code = execute_cmd_line(cmd_line);
+        let _result = execute_cmd_line(cmd_line);
     }
 }
 
@@ -92,7 +123,10 @@ fn parse_input(buffer: &String) -> Option<Command> {
         Some((&command, params)) => match BuiltinId::from_str(command) {
             Ok(BuiltinId::Exit) => {
                 let code = params.first().and_then(|s| s.parse::<i32>().ok());
-                Some(Command::Builtin(Box::new(Exit { code })))
+                Some(Command::Builtin(Builtin::Exit(Exit { code })))
+            }
+            Ok(BuiltinId::Echo) => {
+                Some(Command::Builtin(Builtin::Echo(Echo { args: params.iter().map(|s| s.to_string()).collect_vec() })))
             }
             Err(_) => None,
         },
@@ -123,8 +157,8 @@ fn parse_input(buffer: &String) -> Option<Command> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::str::FromStr;
     use std::assert_matches;
+    use std::str::FromStr;
 
     #[test]
     fn test_builtinid() {
@@ -134,27 +168,19 @@ mod test {
 
     #[test]
     fn test_parse_builtin_exit() {
-        let result = parse_input(&"exit".to_string());
-
-        match result {
-            Some(Command::Builtin(cmd)) => {
-                let exit_cmd = cmd
-                    .as_any()
-                    .downcast_ref::<Exit>()
-                    .expect("Expected to find an Exit struct");
-                assert_eq!(exit_cmd.code, None);
-            }
-            _ => panic!("Expected an Exit command."),
-        }
+        assert_matches!(
+            parse_input(&"exit".to_string()).unwrap(),
+            Command::Builtin(Builtin::Exit(Exit { code: None }))
+        );
     }
 
-    // #[test]
-    // fn test_parse_builtin_echo() {
-    //     assert_matches!(
-    //         parse_input(&"echo some thing".to_string()),
-    //         Some(OldCommand::BuiltinType(Builtin::Echo(_)))
-    //     );
-    // }
+    #[test]
+    fn test_parse_builtin_echo() {
+        assert_matches!(
+            parse_input(&"echo some thing".to_string()).unwrap(),
+            Command::Builtin(Builtin::Echo(Echo{args: _}))
+        );
+    }
 
     // #[test]
     // fn test_parse_builtin_type() {
