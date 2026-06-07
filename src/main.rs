@@ -6,10 +6,12 @@ use strum_macros::{Display, EnumString};
 mod builtin_echo;
 mod builtin_exit;
 mod builtin_type;
+mod external_cmd;
 
 use builtin_echo::Echo;
 use builtin_exit::Exit;
 use builtin_type::Type;
+use external_cmd::ExternalCmd;
 
 // Builtins
 // List of known builtins to be used to match them in strings
@@ -39,24 +41,11 @@ impl Builtin {
     }
 }
 
-#[derive(Debug, PartialEq)]
-struct ExecutableCmd {
-    name: String,
-    parameters: Vec<String>,
-}
-
-impl ExecutableCmd {
-    fn run(&self) -> io::Result<i32> {
-        println!("{}: command not found", self.name);
-        Err(Error::from_raw_os_error(1))
-    }
-}
-
 #[derive(Debug)]
 enum Command {
     //Builtin(Box<dyn BuiltinCmd>),
     Builtin(Builtin),
-    External(ExecutableCmd),
+    External(ExternalCmd),
 }
 
 fn main() {
@@ -105,7 +94,7 @@ fn parse_input(buffer: &String) -> Option<Command> {
                 args: params.iter().map(|s| s.to_string()).collect_vec(),
             }))),
             // If matching a builtin fails, treat as executable command
-            Err(_) => Some(Command::External(ExecutableCmd {
+            Err(_) => Some(Command::External(ExternalCmd {
                 name: command.to_string(),
                 parameters: params.iter().map(|s| s.to_string()).collect_vec(),
             })),
@@ -152,7 +141,7 @@ mod test {
         let _exe_name = "myexe".to_string();
         assert_matches!(
             parse_input(&"myexe somefile".to_string()).unwrap(),
-            Command::External(ExecutableCmd {
+            Command::External(ExternalCmd {
                 name: _,
                 parameters: _
             })
