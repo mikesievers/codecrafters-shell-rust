@@ -1,12 +1,13 @@
-use itertools::Itertools;
-use std::io::{self, Error, Write, stdin};
-use std::str::FromStr;
-use strum_macros::{Display, EnumString};
-
 mod builtin_echo;
 mod builtin_exit;
 mod builtin_type;
 mod external_cmd;
+mod util;
+
+use itertools::Itertools;
+use std::io::{self, Error, Write, stdin};
+use std::str::FromStr;
+use strum_macros::{Display, EnumString};
 
 use builtin_echo::Echo;
 use builtin_exit::Exit;
