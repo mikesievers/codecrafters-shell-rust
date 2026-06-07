@@ -11,7 +11,7 @@ pub struct ExternalCmd {
 impl ExternalCmd {
     pub fn run(&self) -> io::Result<i32> {
         match find_executable_in_path(&self.name) {
-            Some(full_path) => match Command::new(&full_path).args(&self.parameters).output() {
+            Some(full_path) => match Command::new(&self.name).args(&self.parameters).output() {
                 Ok(output) => {
                     io::stdout().write_all(&output.stdout)?;
                     io::stderr().write_all(&output.stderr)?;
